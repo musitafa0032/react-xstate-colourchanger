@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/react-xstate-colourchanger/static/css/main.26955afe.chunk.css",
-    "main.js": "/react-xstate-colourchanger/static/js/main.f075ebfb.chunk.js",
-    "main.js.map": "/react-xstate-colourchanger/static/js/main.f075ebfb.chunk.js.map",
+    "main.js": "/react-xstate-colourchanger/static/js/main.f9873b76.chunk.js",
+    "main.js.map": "/react-xstate-colourchanger/static/js/main.f9873b76.chunk.js.map",
     "runtime-main.js": "/react-xstate-colourchanger/static/js/runtime-main.e195dcc8.js",
     "runtime-main.js.map": "/react-xstate-colourchanger/static/js/runtime-main.e195dcc8.js.map",
     "static/js/2.e331e4f6.chunk.js": "/react-xstate-colourchanger/static/js/2.e331e4f6.chunk.js",
@@ -15,6 +15,6 @@
     "static/js/runtime-main.e195dcc8.js",
     "static/js/2.e331e4f6.chunk.js",
     "static/css/main.26955afe.chunk.css",
-    "static/js/main.f075ebfb.chunk.js"
+    "static/js/main.f9873b76.chunk.js"
   ]
 }
