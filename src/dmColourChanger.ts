@@ -1,5 +1,21 @@
 import { MachineConfig, send, Action } from "xstate";
+import "./styles.scss";
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+import { useMachine, asEffect } from "@xstate/react";
+import { inspect } from "@xstate/inspect";
 
+// SRGS parser and example (logs the results to console on page load)
+import { loadGrammar } from './runparser'
+import { parse } from './chartparser'
+import { grammar } from './grammars/pizzaGrammar'
+
+const gram = loadGrammar(grammar)
+const input = "I would like a coca cola and three large pizzas with pepperoni and mushrooms"
+const prs = parse(input.split(/\s+/), gram)
+const result = prs.resultsForRule(gram.$root)[0]
+
+console.log(result)
 
 const sayColour: Action<SDSContext, SDSEvent> = send((context: SDSContext) => ({
     type: "SPEAK", value: `Repainting to ${context.recResult}`
@@ -11,16 +27,17 @@ function say(text: string): Action<SDSContext, SDSEvent> {
 
 function promptAndAsk(prompt: string): MachineConfig<SDSContext, any, SDSEvent> {
     return ({
-	initial: 'prompt',
-	states: {
+        initial: 'prompt',
+        states: {
             prompt: {
-		entry: say(prompt),
-		on: { ENDSPEECH: 'ask' }
+                entry: say(prompt),
+                on: { ENDSPEECH: 'ask' }
             },
             ask: {
-		entry: send('LISTEN'),
+                entry: send('LISTEN'),
             },
-	}})
+        }
+    })
 }
 
 
@@ -38,7 +55,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = ({
                     { target: 'stop', cond: (context) => context.recResult === 'stop' },
                     { target: 'repaint' }]
             },
-	    ...promptAndAsk("Tell me the colour")
+            ...promptAndAsk("Tell me the colour")
         },
         stop: {
             entry: say("Ok"),
