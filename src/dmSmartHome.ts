@@ -1,4 +1,9 @@
 import { MachineConfig, send, Action, assign } from "xstate";
+import "./styles.scss";
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+import { useMachine, asEffect } from "@xstate/react";
+import { inspect } from "@xstate/inspect";
 
 // SRGS parser and example (logs the results to console on page load)
 import { loadGrammar } from './runparser'
@@ -34,6 +39,9 @@ function promptAndAsk(prompt: string): MachineConfig<SDSContext, any, SDSEvent> 
             ask: {
                 entry: listen(),
             },
+            nomatch: {entry: say("Please say it again"),
+                on: { ENDSPEECH: 'prompt' }
+            }
         }
     })
 }
@@ -51,7 +59,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = ({
             on: {
                 RECOGNISED: [{
                     cond: (context) => parsing(context.recResult) !== undefined,
-                    target: "returntheobject",
+                    target: "returnobject",
                     actions: assign((context) => { return { option: parsing(context.recResult) } }),
                 },
                 {target: ".nomatch" }]    
