@@ -15,7 +15,7 @@ function listen(): Action<SDSContext, SDSEvent> {
     return send('LISTEN')
 }
 
-function promptAndAsk(prompt: string): MachineConfig<SDSContext, any, SDSEvent> {
+function promptAndAsk(prompt: string, speechprompt:string): MachineConfig<SDSContext, any, SDSEvent> {
     return ({
         initial: "prompt",
         states: {
@@ -23,6 +23,10 @@ function promptAndAsk(prompt: string): MachineConfig<SDSContext, any, SDSEvent> 
                 entry: say(prompt),
                 on: { ENDSPEECH: "ask" }
             },
+            hist: {type: "history"},
+            maxspeech: {
+                ...speech(speechprompt)
+        },  
             ask: {
                 entry: [listen(), send('MAXSPEECH', {delay: 5000})]
             },
@@ -84,11 +88,13 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = ({
                 RECOGNISED: [{
                     target: "query",
                     cond: (context) => !(context.recResult in commands),
-                    actions: assign((context) => { return { option: context.recResult } }),
+                    actions: [assign((context) => { return { option: context.recResult } }),assign((context) => { grammar3["count"]=0}),cancel("maxsp")],
+                    
                 },
                 {target: "help1",
-                cond: (context) => context.recResult in commands }],
-                MAXSPEECH: [{target:"welcome.maxspeech1",
+                cond: (context) => context.recResult in commands,
+                actions: cancel("maxsp")} ],
+                MAXSPEECH: [{target:".maxspeech",
                 cond: (context) => grammar3["count"] <= 2,
                 actions: assign((context) => { grammar3["count"]=grammar3["count"]+1 } )
                 },{target: "#root.dm.init", 
@@ -101,7 +107,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = ({
                 on: { ENDSPEECH: "ask" }
             },
             hist: {type: "history"},
-               maxspeech1: {
+               maxspeech: {
                 ...speech("You did not respond，just tell me what you want to do")
         },  
             ask: {
@@ -196,7 +202,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = ({
             on: {
                 RECOGNISED: [{
                     cond: (context) => "person" in (grammar[context.recResult] || {}),
-                    actions: assign((context) => { return { person: grammar[context.recResult].person } }),
+                    actions: [assign((context) => { return { person: grammar[context.recResult].person } }),assign((context) => { grammar3["count"]=0}), cancel("maxsp")],
                     target: "day"
 
                 },
@@ -204,8 +210,9 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = ({
                  cond: (context) => !(context.recResult in commands),
                  actions: cancel("maxsp")},
                  {target: "help2",
-                 cond: (context) => context.recResult in commands}],
-                 MAXSPEECH: [{target:"who.maxspeech2",
+                 cond: (context) => context.recResult in commands,
+                 actions: cancel("maxsp")}],
+                 MAXSPEECH: [{target:".maxspeech",
                  cond: (context) => grammar3["count"] <= 2,
                 actions: assign((context) => { grammar3["count"]=grammar3["count"]+1 } )
                 },{target: "#root.dm.init", 
@@ -221,7 +228,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = ({
                 ask: {
                     entry: [listen(), send('MAXSPEECH', {delay: 5000, id: "maxsp"})]
                 },
-                maxspeech2: {
+                maxspeech: {
                     ...speech("You did not respond, just tell me the person")
                 },
                 nomatch: {
@@ -239,7 +246,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = ({
             on: {
 	            RECOGNISED: [{
 	                cond: (context) => "day" in (grammar[context.recResult] || {}),
-		            actions: assign((context) => { return { day: grammar[context.recResult].day } }),
+		            actions: [assign((context) => { return { day: grammar[context.recResult].day } }),assign((context) => { grammar3["count"]=0}),cancel("maxsp")],
 		            target: "wholeday"
 
 		        },	
@@ -247,8 +254,9 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = ({
                 cond: (context) => !(context.recResult in commands),
                 actions: cancel("maxsp")},
                 {target: "help3",
-                cond: (context) => context.recResult in commands}],
-                MAXSPEECH: [{target:"day.maxspeech3",
+                cond: (context) => context.recResult in commands,
+                actions: cancel("maxsp")}],
+                MAXSPEECH: [{target:".maxspeech",
                 cond: (context) => grammar3["count"] <= 2,
                 actions: assign((context) => { grammar3["count"]=grammar3["count"]+1 } )
                 },{target: "#root.dm.init", 
@@ -267,7 +275,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = ({
 		        ask: {
 		            entry: [listen(), send('MAXSPEECH', {delay: 5000, id: "maxsp"})]
 	            },
-                maxspeech3: {
+                maxspeech: {
                  ...speech("You did not respond, say a day")
               },
 		        nomatch: {
@@ -285,18 +293,20 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = ({
 		        on: {
 	                RECOGNISED: [{
 			            cond: (context) => grammar2[context.recResult] === true,
-                        target: "notime"},
+                        target: "notime",
+                        actions: [assign((context) => { grammar3["count"]=0}),cancel("maxsp")]},
 						{
 						cond: (context) => grammar2[context.recResult] === false,
-						target: "whattime"
-
+						target: "whattime",
+                        actions: [assign((context) => { grammar3["count"]=0}),cancel("maxsp")]
 		            },
 	                { target: ".nomatch",
                     cond: (context) => !(context.recResult in commands),
                     actions: cancel("maxsp")},
                     {target: "help4",
-                    cond: (context) => context.recResult in commands}],
-                    MAXSPEECH: [{target:"wholeday.maxspeech4",
+                    cond: (context) => context.recResult in commands,
+                    actions: cancel("maxsp")}],
+                    MAXSPEECH: [{target:".maxspeech",
                     cond: (context) => grammar3["count"] <= 2,
                 actions: assign((context) => { grammar3["count"]=grammar3["count"]+1 } )
                 },{target: "#root.dm.init", 
@@ -315,7 +325,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = ({
 		            ask: {
 		                entry: [listen(), send('MAXSPEECH', {delay: 5000, id: "maxsp"})]
 		            },
-                    maxspeech4: {
+                    maxspeech: {
                       ...speech("You did not respond, say a decision")
                     },
 		            nomatch: {
@@ -332,18 +342,20 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = ({
 	               on: {
 		               RECOGNISED: [{ 
 			               cond: (context) => grammar2[context.recResult] === true,
-			               target: "Finished"},
+			               target: "Finished",
+                           actions: [assign((context) => { grammar3["count"]=0}),cancel("maxsp")]},
 						   {
 							cond: (context) => grammar2[context.recResult] === false,
-                           target: "who"
-						   
+                           target: "who",
+						   actions: [assign((context) => { grammar3["count"]=0}),cancel("maxsp")]
 		                },
 		                { target: ".nomatch",
                         cond: (context) => !(context.recResult in commands),
                         actions: cancel("maxsp")},
                         {target: "help5",
-                        cond: (context) => context.recResult in commands}],
-                        MAXSPEECH: [{target:"notime.maxspeech5",
+                        cond: (context) => context.recResult in commands,
+                        actions: cancel("maxsp")}],
+                        MAXSPEECH: [{target:".maxspeech",
                         cond: (context) => grammar3["count"] <= 2,
                 actions: assign((context) => { grammar3["count"]=grammar3["count"]+1 } )
                 },{target: "#root.dm.init", 
@@ -362,7 +374,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = ({
 		                ask: {
 			                entry: [listen(), send('MAXSPEECH', {delay: 5000, id: "maxsp"})]
 		                },
-                        maxspeech5: {
+                        maxspeech: {
                              ...speech("You did not respond, please confirm it")},
 		                nomatch: {
 			                entry: say("Please repeat it again"),
@@ -378,7 +390,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = ({
 					on: {
 						RECOGNISED: [{
 							cond: (context) => "time" in (grammar[context.recResult] || {}),
-							actions: assign((context) => { return { time: grammar[context.recResult].time } }),
+							actions: [assign((context) => { return { time: grammar[context.recResult].time } }),assign((context) => { grammar3["count"]=0}),cancel("maxsp")],
 							target: "withtime"
 
 						},
@@ -386,8 +398,9 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = ({
                         cond: (context) => !(context.recResult in commands),
                         actions: cancel("maxsp")},
                         {target: "help6",
-                        cond: (context) => context.recResult in commands}],
-                        MAXSPEECH: [{target:"whattime.maxspeech6",
+                        cond: (context) => context.recResult in commands,
+                        actions: cancel("maxsp")}],
+                        MAXSPEECH: [{target:".maxspeech",
                         cond: (context) => grammar3["count"] <= 2,
                 actions: assign((context) => { grammar3["count"]=grammar3["count"]+1 } )
                 },{target: "#root.dm.init", 
@@ -402,7 +415,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = ({
 					ask: {
 						entry: [listen(), send('MAXSPEECH', {delay: 5000, id: "maxsp"})]
 				},
-                maxspeech6: {
+                maxspeech: {
                   ...speech("You did not respond, say a time")
                 },
 				nomatch: {
@@ -420,18 +433,20 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = ({
 			on: {
 				RECOGNISED: [{ 
 					cond: (context) => grammar2[context.recResult] === true,
-					target: "Finished"},
+					target: "Finished",
+                    actions: [assign((context) => { grammar3["count"]=0}),cancel("maxsp")]},
 					{
 					cond: (context) => grammar2[context.recResult] === false,
-					target: "who"
-
+					target: "who",
+                    actions: [assign((context) => { grammar3["count"]=0}),cancel("maxsp")]
 				 },
 				 { target: ".nomatch",
                  cond: (context) => !(context.recResult in commands),
                  actions: cancel("maxsp")},
                  {target: "help7",
-                 cond: (context) => context.recResult in commands}],
-                 MAXSPEECH: [{target:"withtime.maxspeech7",
+                 cond: (context) => context.recResult in commands,
+                 actions: cancel("maxsp")}],
+                 MAXSPEECH: [{target:".maxspeech",
                  cond: (context) => grammar3["count"] <= 2,
                 actions: assign((context) => { grammar3["count"]=grammar3["count"]+1 } )
                 },{target: "#root.dm.init", 
@@ -450,7 +465,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = ({
 				 ask: {
 					 entry: [listen(), send('MAXSPEECH', {delay: 5000, id: "maxsp"})]
 				 },
-                maxspeech7: {
+                maxspeech: {
                  ...speech("You did not respond, just confirm it")
                 },        
 				 nomatch: {
