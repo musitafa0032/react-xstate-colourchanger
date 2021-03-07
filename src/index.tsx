@@ -35,7 +35,6 @@ const machine = Machine<SDSContext, any, SDSEvent>({
                     }
                 },
                 recognising: {
-                    initial: 'progress',
                     entry: 'recStart',
                     exit: 'recStop',
                     on: {
@@ -47,8 +46,6 @@ const machine = Machine<SDSContext, any, SDSEvent>({
                         RECOGNISED: 'idle'
                     },
                     states: {
-                        progress: {
-                        },
                         match: {
                             entry: send('RECOGNISED'),
                         },
